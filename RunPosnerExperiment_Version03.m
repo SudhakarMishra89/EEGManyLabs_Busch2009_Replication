@@ -23,7 +23,7 @@ diary myDiaryFile
 
 EEGmode = 1; %%changed by r&s to 0. Make it 1 when you are running with EEG
 %-------------------------------------------------------------------------`
-%              Create outputfile if it does not exist.                    %
+%              This code is created by EEG Lab Team in IIT-Kanpr, India    %
 %-------------------------------------------------------------------------%
 addpath('C:\Program Files\MATLAB\R2022a\bin');  %for mex64 files
 if EEGmode == 1  
