@@ -1,5 +1,6 @@
 function RunExperiment(Name)
     %Name=('Pilot1_01');
+    % Please change the screen width (cm), screen height (cm) and monitor distance (cm) as per your lab specification
     prompt= {'Subject', 'Subject number:', 'age', 'gender', 'screen width (cm)', 'screen height (cm)', 'monitor distance (cm)'};
     defaults={'Testing','S01', '30', 'M', '54', '30', '75'};
     answer= inputdlg(prompt, 'ChoiceRT', 2, defaults);
