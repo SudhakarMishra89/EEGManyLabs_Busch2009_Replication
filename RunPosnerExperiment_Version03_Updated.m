@@ -1,9 +1,13 @@
 function RunExperiment(Name)
     %Name=('Pilot1_01');
-    prompt= {'Subject', 'Subject''s number:', 'age', 'gender'};
-    defaults={'Testing','S01', '30', 'M'};
+    prompt= {'Subject', 'Subject number:', 'age', 'gender', 'screen width (cm)', 'screen height (cm)', 'monitor distance (cm)'};
+    defaults={'Testing','S01', '30', 'M', '54', '30', '75'};
     answer= inputdlg(prompt, 'ChoiceRT', 2, defaults);
-    [output, subid, subage, gender] = deal(answer{:}); %all input variables are strings
+    [output, subid, subage, gender] = deal(answer{1:4}); %edited by alessia
+    %[output, subid, subage, gender, screen_width_cm, screen_heigth_cm, screen_dist] = deal(answer{:}); %all input variables are strings
+    screen_width_cm = str2double(answer{5});
+    screen_heigth_cm = str2double(answer{6});
+    screen_dist = str2double(answer{7});
     Name= strcat(output, subid, gender, subage);
  try
     diary myDiaryFile
@@ -274,7 +278,8 @@ function RunExperiment(Name)
     centery = screenHeight/2;
     ecc =7;
     %[PixelsPerDegree, DegreesPerPixel] = VisAng2( [screenWidth, screenHeight], [ 36, 27 ], 46);
-    [PixelsPerDegree, DegreesPerPixel] = VisAng2( [screenWidth, screenHeight], [ 54, 30 ], 75);
+    %[PixelsPerDegree, DegreesPerPixel] = VisAng2( [screenWidth, screenHeight], [ 54, 30 ], 75); % For NSLab, IIT Kanpur
+    [PixelsPerDegree, DegreesPerPixel] = VisAng2( [screenWidth, screenHeight], [screen_width_cm,screen_heigth_cm], screen_dist); %edited by alessia
     PixelsPerDegree = mean(PixelsPerDegree);
     LeftEccentricity  = centerx - ecc * PixelsPerDegree; % corresponds to Latour's parameters
     RightEccentricity = centerx + ecc * PixelsPerDegree; % corresponds to Latour's parameters
