@@ -51,8 +51,7 @@ function [Avg_GFPVals, rho] = circularCorrelation(EEG, timeRange_A, filePath, na
     pval = zeros(EEG.nbchan, length(outfreqs), PrestimTime);
     sampStart = (timeRange_A*EEG.srate)/1000;
 
-    %if (~isfile(savenameGFP))      
-    if (isfile(savenameGFP))      
+    if (~isfile(savenameGFP))
         GFPVals = zeros(EEG.trials, 1);
     
         for samp_ = sampStart(1): sampStart(2)
@@ -66,8 +65,7 @@ function [Avg_GFPVals, rho] = circularCorrelation(EEG, timeRange_A, filePath, na
         Avg_GFPVals = Avg_GFPVals.Avg_GFPVals;
     end
 
-    %if (~isfile(savenameRho))
-    if (isfile(savenamePval))
+    if (~isfile(savenameRho))    
         for c = 1:EEG.nbchan
             savename = fullfile(filePath, 'tf', [name, '_TF_', num2str(c)]);
             tf_ = load(savename);
