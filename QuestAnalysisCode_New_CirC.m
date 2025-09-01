@@ -488,154 +488,154 @@ for cond_ = 1 : length(conditionsA)
 end
 
 
-%% GFP Plotting
-attended = zeros(1,1050);
-att_hits = zeros(1,1050);
-att_miss = zeros(1,1050);
-Unattend = zeros(1,1050);
-Unat_hits = zeros(1,1050);
-Unat_miss = zeros(1,1050);
-for sub_ = 1 : length(subjects)
-    %sub_ = 2;
-    display(subjects(sub_).name)
-    subDir = fullfile(filePath, subjects(sub_).name);
-    savingFile_GFP_A = fullfile(subDir, strcat("GFP_A_", filterWidthStr, '.mat'));
-    savingFile_GFP_U = fullfile(subDir, strcat("GFP_U_", filterWidthStr, '.mat'));
-    savingFile_GFP_AH = fullfile(subDir, strcat("GFP_AH_", filterWidthStr, '.mat'));
-    savingFile_GFP_AM = fullfile(subDir, strcat("GFP_AM_", filterWidthStr, '.mat'));
-    savingFile_GFP_UH = fullfile(subDir, strcat("GFP_UH_", filterWidthStr, '.mat'));
-    savingFile_GFP_UM = fullfile(subDir, strcat("GFP_UM_", filterWidthStr, '.mat'));
-    GFP_A = load(savingFile_GFP_A);
-    attended = vertcat(attended, GFP_A.PointWiseGFP);
-    GFP_U = load(savingFile_GFP_U);
-    Unattend = vertcat(Unattend, GFP_U.PointWiseGFP);
-    GFP_AH = load(savingFile_GFP_AH);
-    att_hits = vertcat(att_hits, GFP_AH.PointWiseGFP);
-    GFP_AM = load(savingFile_GFP_AM);
-    att_miss = vertcat(att_miss, GFP_AM.PointWiseGFP);
-    GFP_UH = load(savingFile_GFP_UH);
-    Unat_hits = vertcat(Unat_hits, GFP_UH.PointWiseGFP);
-    GFP_UM = load(savingFile_GFP_UM);
-    Unat_miss = vertcat(Unat_miss, GFP_UM.PointWiseGFP);
-end
-
-plot(mean(att_hits([3,5,6],:),1), 'r'); hold on;
-plot(mean(att_miss([3,5,6],:),1), 'g'); hold on;
-plot(mean(Unat_hits([3,5,6],:),1), 'b'); hold on;
-plot(mean(Unat_miss([3,5,6],:),1), 'c'); hold on;
-legend('Attended Hits', 'Attended Misses', 'UnAttended Hits', 'UnAttended Misses')
-
-%% Calculate significant corrlations for different conditions and for different channels
-NullDistribution_Trial_Shuffled(subjects, filePath, 'Attended');
-NullDistribution_Trial_Shuffled(subjects, filePath, 'UnAttended');
-NullDistribution_Trial_Shuffled(subjects, filePath, 'Attended left');
-NullDistribution_Trial_Shuffled(subjects, filePath, 'Unattended left');
-NullDistribution_Trial_Shuffled(subjects, filePath, 'Attended right');
-NullDistribution_Trial_Shuffled(subjects, filePath, 'Unattended right');
-
-Avg_NullDistribution(subjects, filePath, 'Average');
-
-%%%%% First of all with the above code I need to find out the window which should be similar to the window (4-10 Hz, -400 to -100 ms). 
-
-%% The following analysis is for binning. 
-
-%     phaseImpactGFP(EEG_A);
-%     phaseImpactGFP(EEG_U);
-
-% Correlations between the GFP at this time and prestimulus phase were first computed for each condition 
-% (attended left, attended right, unattended left, unattended right) and channel separately and then averaged. 
-% Across all channels, this analysis yielded strong correlations between prestimulus phase and poststimulus 
-% GFP in a window from 4 to 10 Hz and−400 ms to−100 ms.
-    
-%findingOptimalTFPoint(filePath);
-
-time_freq_Point = [-0.224 7.1]; 
-if ~isfile(fullfile(filePath, 'BinnedPhaseGFP.mat'))
-    for sub_ = 1 : length(subjects)
-        display(subjects(sub_).name)
-        subDir = fullfile(filePath, subjects(sub_).name);
-        fileName = dir(fullfile(subDir, "*.vhdr"));
-        temp_ = strsplit(fileName.name, '.vhdr');
-        EEG_A_File = ['EEG_A_' filterWidthStr '_' temp_{1} '.set'];
-        EEG_U_File = ['EEG_U_' filterWidthStr '_' temp_{1} '.set'];
-        resDir = fullfile(filePath, 'PhaseImpactGFP');
-    
-        behavDataFold = dir(fullfile(filePath, [subjects(sub_).name '*']));
-        behavDataFold = fullfile(behavDataFold.folder, behavDataFold.name);
-        trialIndexCond = load(fullfile(behavDataFold, "trialIndexCond.mat"));
-        trialIndexCond = trialIndexCond.trialIndexCond;
-    
-        if ~isdir(resDir)
-            mkdir(resDir)
-        end    
-        conditions = fullfile(subDir, 'Conditions');
-        saveArr = [];
-        EEG_A = pop_loadset('filename', EEG_A_File, 'filepath', conditions);
-        res_ = phaseImpactGFP(EEG_A, fullfile(subDir, 'tf'), time_freq_Point, 'Attended', frontoCentral, trialIndexCond, subjects(sub_).name, resDir);
-        saveArr = [saveArr, res_];    
-        EEG_U = pop_loadset('filename', EEG_U_File, 'filepath', conditions);
-        res_ = phaseImpactGFP(EEG_U, fullfile(subDir, 'tf'), time_freq_Point, 'Unattended', frontoCentral, trialIndexCond, subjects(sub_).name, resDir);
-        saveArr = [saveArr, res_];
-        saveArr = saveArr';
-        cond_ = [repmat({'Attended'}, size(res_,2), 1); repmat({'Unattended'}, size(res_,2), 1)];
-        sub_C = [repmat({temp_{1,1}}, size(saveArr, 1), 1)];
-        Table_ = table(saveArr(:, 1), saveArr(:, 2), saveArr(:, 3), cond_, sub_C, 'VariableNames', {'GFPAmp_CS', 'Hit_R', 'Phase', 'Conditions', 'Subjects'});    
-    
-        if sub_ == 1
-            var = Table_;
-        else
-            var = [var; Table_];
-        end
-    end
-    save(fullfile(filePath, 'BinnedPhaseGFP.mat'), 'var')
-else
-    load(fullfile(filePath, 'BinnedPhaseGFP.mat'))
-end
-
-AttendedIndex = [];
-UnattendedIndex = [];
-
-for i = 1 : size(var, 1)
-    if strmatch(var.Conditions{i}, 'Attended', 'exact')
-        AttendedIndex = [AttendedIndex, i];
-    else
-        UnattendedIndex = [UnattendedIndex, i];
-    end
-end
-% Attended
-att_phase = var.Phase(AttendedIndex);
-phaseIdx = find(att_phase~=0);
-att_phase = att_phase(phaseIdx);
-att_GFP = var.GFPAmp_CS(AttendedIndex);
-att_GFP = att_GFP(phaseIdx);
-att_hit_R = var.Hit_R(AttendedIndex);
-att_hit_R = att_hit_R(phaseIdx);
-
-% Unattended
-Uatt_phase = var.Phase(UnattendedIndex);
-phaseIdx = find(Uatt_phase~=0);
-Uatt_phase = Uatt_phase(phaseIdx);
-Uatt_GFP = var.GFPAmp_CS(UnattendedIndex);
-Uatt_GFP = Uatt_GFP(phaseIdx);
-Uatt_hit_R = var.Hit_R(UnattendedIndex);
-Uatt_hit_R = Uatt_hit_R(phaseIdx);
-
-PhaseImpGFP_FTest(var, att_phase, att_GFP);
-PhaseImpGFP_FTest(var, Uatt_phase, Uatt_GFP);
-PhaseImpInteract(att_phase, Uatt_phase, att_GFP, Uatt_GFP);
-
-PhaseImpGFP_FTest(var, att_phase, att_hit_R);
-PhaseImpGFP_FTest(var, Uatt_phase, Uatt_hit_R);
-PhaseImpInteract(att_phase, Uatt_phase, att_hit_R, Uatt_hit_R);
-
-%phaseImpactGFP(EEG_AL, fullfile(subDir, 'tf'), trials_.AL, time_freq_Point, 'Attended left', frontoCentral, trialIndexCond);
-%phaseImpactGFP(EEG_UL, fullfile(subDir, 'tf'), trials_.UL, time_freq_Point, 'Unattended left', frontoCentral, trialIndexCond);
-%phaseImpactGFP(EEG_AR, fullfile(subDir, 'tf'), trials_.AR, time_freq_Point, 'Attended right', frontoCentral, trialIndexCond);
-%phaseImpactGFP(EEG_UR, fullfile(subDir, 'tf'), trials_.UR, time_freq_Point, 'Unattended right', frontoCentral, trialIndexCond); 
-
-% Calculate the average correlation value (averaged across conditions) for
-% different channels across time-frequency points.
-
-% different channles
-
-%preStimPower()
+% %% GFP Plotting
+% attended = zeros(1,1050);
+% att_hits = zeros(1,1050);
+% att_miss = zeros(1,1050);
+% Unattend = zeros(1,1050);
+% Unat_hits = zeros(1,1050);
+% Unat_miss = zeros(1,1050);
+% for sub_ = 1 : length(subjects)
+%     %sub_ = 2;
+%     display(subjects(sub_).name)
+%     subDir = fullfile(filePath, subjects(sub_).name);
+%     savingFile_GFP_A = fullfile(subDir, strcat("GFP_A_", filterWidthStr, '.mat'));
+%     savingFile_GFP_U = fullfile(subDir, strcat("GFP_U_", filterWidthStr, '.mat'));
+%     savingFile_GFP_AH = fullfile(subDir, strcat("GFP_AH_", filterWidthStr, '.mat'));
+%     savingFile_GFP_AM = fullfile(subDir, strcat("GFP_AM_", filterWidthStr, '.mat'));
+%     savingFile_GFP_UH = fullfile(subDir, strcat("GFP_UH_", filterWidthStr, '.mat'));
+%     savingFile_GFP_UM = fullfile(subDir, strcat("GFP_UM_", filterWidthStr, '.mat'));
+%     GFP_A = load(savingFile_GFP_A);
+%     attended = vertcat(attended, GFP_A.PointWiseGFP);
+%     GFP_U = load(savingFile_GFP_U);
+%     Unattend = vertcat(Unattend, GFP_U.PointWiseGFP);
+%     GFP_AH = load(savingFile_GFP_AH);
+%     att_hits = vertcat(att_hits, GFP_AH.PointWiseGFP);
+%     GFP_AM = load(savingFile_GFP_AM);
+%     att_miss = vertcat(att_miss, GFP_AM.PointWiseGFP);
+%     GFP_UH = load(savingFile_GFP_UH);
+%     Unat_hits = vertcat(Unat_hits, GFP_UH.PointWiseGFP);
+%     GFP_UM = load(savingFile_GFP_UM);
+%     Unat_miss = vertcat(Unat_miss, GFP_UM.PointWiseGFP);
+% end
+% 
+% plot(mean(att_hits([3,5,6],:),1), 'r'); hold on;
+% plot(mean(att_miss([3,5,6],:),1), 'g'); hold on;
+% plot(mean(Unat_hits([3,5,6],:),1), 'b'); hold on;
+% plot(mean(Unat_miss([3,5,6],:),1), 'c'); hold on;
+% legend('Attended Hits', 'Attended Misses', 'UnAttended Hits', 'UnAttended Misses')
+% 
+% %% Calculate significant corrlations for different conditions and for different channels
+% NullDistribution_Trial_Shuffled(subjects, filePath, 'Attended');
+% NullDistribution_Trial_Shuffled(subjects, filePath, 'UnAttended');
+% NullDistribution_Trial_Shuffled(subjects, filePath, 'Attended left');
+% NullDistribution_Trial_Shuffled(subjects, filePath, 'Unattended left');
+% NullDistribution_Trial_Shuffled(subjects, filePath, 'Attended right');
+% NullDistribution_Trial_Shuffled(subjects, filePath, 'Unattended right');
+% 
+% Avg_NullDistribution(subjects, filePath, 'Average');
+% 
+% %%%%% First of all with the above code I need to find out the window which should be similar to the window (4-10 Hz, -400 to -100 ms). 
+% 
+% %% The following analysis is for binning. 
+% 
+% %     phaseImpactGFP(EEG_A);
+% %     phaseImpactGFP(EEG_U);
+% 
+% % Correlations between the GFP at this time and prestimulus phase were first computed for each condition 
+% % (attended left, attended right, unattended left, unattended right) and channel separately and then averaged. 
+% % Across all channels, this analysis yielded strong correlations between prestimulus phase and poststimulus 
+% % GFP in a window from 4 to 10 Hz and−400 ms to−100 ms.
+% 
+% %findingOptimalTFPoint(filePath);
+% 
+% time_freq_Point = [-0.224 7.1]; 
+% if ~isfile(fullfile(filePath, 'BinnedPhaseGFP.mat'))
+%     for sub_ = 1 : length(subjects)
+%         display(subjects(sub_).name)
+%         subDir = fullfile(filePath, subjects(sub_).name);
+%         fileName = dir(fullfile(subDir, "*.vhdr"));
+%         temp_ = strsplit(fileName.name, '.vhdr');
+%         EEG_A_File = ['EEG_A_' filterWidthStr '_' temp_{1} '.set'];
+%         EEG_U_File = ['EEG_U_' filterWidthStr '_' temp_{1} '.set'];
+%         resDir = fullfile(filePath, 'PhaseImpactGFP');
+% 
+%         behavDataFold = dir(fullfile(filePath, [subjects(sub_).name '*']));
+%         behavDataFold = fullfile(behavDataFold.folder, behavDataFold.name);
+%         trialIndexCond = load(fullfile(behavDataFold, "trialIndexCond.mat"));
+%         trialIndexCond = trialIndexCond.trialIndexCond;
+% 
+%         if ~isdir(resDir)
+%             mkdir(resDir)
+%         end    
+%         conditions = fullfile(subDir, 'Conditions');
+%         saveArr = [];
+%         EEG_A = pop_loadset('filename', EEG_A_File, 'filepath', conditions);
+%         res_ = phaseImpactGFP(EEG_A, fullfile(subDir, 'tf'), time_freq_Point, 'Attended', frontoCentral, trialIndexCond, subjects(sub_).name, resDir);
+%         saveArr = [saveArr, res_];    
+%         EEG_U = pop_loadset('filename', EEG_U_File, 'filepath', conditions);
+%         res_ = phaseImpactGFP(EEG_U, fullfile(subDir, 'tf'), time_freq_Point, 'Unattended', frontoCentral, trialIndexCond, subjects(sub_).name, resDir);
+%         saveArr = [saveArr, res_];
+%         saveArr = saveArr';
+%         cond_ = [repmat({'Attended'}, size(res_,2), 1); repmat({'Unattended'}, size(res_,2), 1)];
+%         sub_C = [repmat({temp_{1,1}}, size(saveArr, 1), 1)];
+%         Table_ = table(saveArr(:, 1), saveArr(:, 2), saveArr(:, 3), cond_, sub_C, 'VariableNames', {'GFPAmp_CS', 'Hit_R', 'Phase', 'Conditions', 'Subjects'});    
+% 
+%         if sub_ == 1
+%             var = Table_;
+%         else
+%             var = [var; Table_];
+%         end
+%     end
+%     save(fullfile(filePath, 'BinnedPhaseGFP.mat'), 'var')
+% else
+%     load(fullfile(filePath, 'BinnedPhaseGFP.mat'))
+% end
+% 
+% AttendedIndex = [];
+% UnattendedIndex = [];
+% 
+% for i = 1 : size(var, 1)
+%     if strmatch(var.Conditions{i}, 'Attended', 'exact')
+%         AttendedIndex = [AttendedIndex, i];
+%     else
+%         UnattendedIndex = [UnattendedIndex, i];
+%     end
+% end
+% % Attended
+% att_phase = var.Phase(AttendedIndex);
+% phaseIdx = find(att_phase~=0);
+% att_phase = att_phase(phaseIdx);
+% att_GFP = var.GFPAmp_CS(AttendedIndex);
+% att_GFP = att_GFP(phaseIdx);
+% att_hit_R = var.Hit_R(AttendedIndex);
+% att_hit_R = att_hit_R(phaseIdx);
+% 
+% % Unattended
+% Uatt_phase = var.Phase(UnattendedIndex);
+% phaseIdx = find(Uatt_phase~=0);
+% Uatt_phase = Uatt_phase(phaseIdx);
+% Uatt_GFP = var.GFPAmp_CS(UnattendedIndex);
+% Uatt_GFP = Uatt_GFP(phaseIdx);
+% Uatt_hit_R = var.Hit_R(UnattendedIndex);
+% Uatt_hit_R = Uatt_hit_R(phaseIdx);
+% 
+% PhaseImpGFP_FTest(var, att_phase, att_GFP);
+% PhaseImpGFP_FTest(var, Uatt_phase, Uatt_GFP);
+% PhaseImpInteract(att_phase, Uatt_phase, att_GFP, Uatt_GFP);
+% 
+% PhaseImpGFP_FTest(var, att_phase, att_hit_R);
+% PhaseImpGFP_FTest(var, Uatt_phase, Uatt_hit_R);
+% PhaseImpInteract(att_phase, Uatt_phase, att_hit_R, Uatt_hit_R);
+% 
+% %phaseImpactGFP(EEG_AL, fullfile(subDir, 'tf'), trials_.AL, time_freq_Point, 'Attended left', frontoCentral, trialIndexCond);
+% %phaseImpactGFP(EEG_UL, fullfile(subDir, 'tf'), trials_.UL, time_freq_Point, 'Unattended left', frontoCentral, trialIndexCond);
+% %phaseImpactGFP(EEG_AR, fullfile(subDir, 'tf'), trials_.AR, time_freq_Point, 'Attended right', frontoCentral, trialIndexCond);
+% %phaseImpactGFP(EEG_UR, fullfile(subDir, 'tf'), trials_.UR, time_freq_Point, 'Unattended right', frontoCentral, trialIndexCond); 
+% 
+% % Calculate the average correlation value (averaged across conditions) for
+% % different channels across time-frequency points.
+% 
+% % different channles
+% 
+% %preStimPower()

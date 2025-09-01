@@ -1,5 +1,5 @@
 function [EEG] = tf_analysis_corrected(EEG, filePath, name)
-    %% Corrected TF analysis following Busch & VanRullen (2010)
+    %% Time-Frequency analysis - Calculating time-frequency matrix using wavelet transform
     minfreq = 2; 
     maxfreq = 50; 
     frequencies = [minfreq maxfreq]; 

@@ -1,5 +1,5 @@
 function [rho, pval] = circularCorrelation_corrected(EEG, optimalTimeWindow, GFP_perTrial, filePath, name)
-    %% Corrected circular-linear correlation following paper methodology
+    %% Calculating circular-linear correlation between prestimulus phase and post-stimulus GFP
     
     resultDir = fullfile(filePath, 'circularCorrelation_corrected'); 
     if ~isdir(resultDir) 
